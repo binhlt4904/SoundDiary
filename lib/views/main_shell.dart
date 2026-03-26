@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:sound_diary/views/playlist/playlist_screen.dart';
-import 'package:sound_diary/views/profile/profile_screen.dart';
-import 'package:sound_diary/views/widgets/mini_player_widget.dart';
-import '../../core/constants/app_colors.dart';
-import '../../viewmodels/library_viewmodel.dart';
-import '../../viewmodels/favorites_viewmodel.dart';
-import 'favorites/favorites_screen.dart';
+import '../core/constants/app_colors.dart';
+import 'home/home_screen.dart';
+import 'search/search_screen.dart';
 import 'library/library_screen.dart';
+import 'songs/all_songs_screen.dart';
+import 'profile/profile_screen.dart';
+import 'widgets/mini_player_widget.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -20,17 +18,19 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = const [
+    HomeScreen(),
+    SearchScreen(),
     LibraryScreen(),
-    FavoritesScreen(),
-    PlaylistScreen(),
+    AllSongsScreen.embedded(),
     ProfileScreen(),
   ];
 
-  final List<_NavItem> _navItems = const [
-    _NavItem(icon: Icons.library_music_outlined, activeIcon: Icons.library_music_rounded, label: 'Thư viện'),
-    _NavItem(icon: Icons.favorite_border_rounded, activeIcon: Icons.favorite_rounded, label: 'Yêu thích'),
-    _NavItem(icon: Icons.queue_music_outlined, activeIcon: Icons.queue_music_rounded, label: 'Playlist'),
-    _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile'),
+  static const List<_NavItem> _navItems = [
+    _NavItem(icon: Icons.home_outlined,          activeIcon: Icons.home_rounded,          label: 'Home'),
+    _NavItem(icon: Icons.search_outlined,         activeIcon: Icons.search_rounded,         label: 'Tìm kiếm'),
+    _NavItem(icon: Icons.folder_outlined,         activeIcon: Icons.folder_rounded,         label: 'Thư viện'),
+    _NavItem(icon: Icons.library_music_outlined,  activeIcon: Icons.library_music_rounded,  label: 'Nhạc'),
+    _NavItem(icon: Icons.person_outline_rounded,  activeIcon: Icons.person_rounded,         label: 'Profile'),
   ];
 
   @override
@@ -50,40 +50,24 @@ class _MainShellState extends State<MainShell> {
                 color: AppColors.primary.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.music_note_rounded,
-                color: AppColors.primary,
-                size: 18,
-              ),
+              child: const Icon(Icons.music_note_rounded,
+                  color: AppColors.primary, size: 18),
             ),
             const SizedBox(width: 10),
-            const Text(
-              'Music App',
-              style: TextStyle(
-                color: AppColors.onBackground,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-              ),
-            ),
+            const Text('Music App',
+                style: TextStyle(
+                    color: AppColors.onBackground,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3)),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline_rounded,
-                color: AppColors.onSurfaceVariant, size: 22),
-            onPressed: () => _showAboutDialog(context),
-          ),
-        ],
       ),
       body: Column(
         children: [
           const Divider(height: 1, thickness: 0.5),
           Expanded(
-            child: IndexedStack(
-              index: _currentIndex,
-              children: _screens,
-            ),
+            child: IndexedStack(index: _currentIndex, children: _screens),
           ),
           const MiniPlayerWidget(),
         ],
@@ -121,18 +105,15 @@ class _MainShellState extends State<MainShell> {
                         size: 24,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        item.label,
-                        style: TextStyle(
-                          color: isActive
-                              ? AppColors.primary
-                              : AppColors.onSurfaceVariant,
-                          fontSize: 11,
-                          fontWeight: isActive
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                        ),
-                      ),
+                      Text(item.label,
+                          style: TextStyle(
+                              color: isActive
+                                  ? AppColors.primary
+                                  : AppColors.onSurfaceVariant,
+                              fontSize: 10,
+                              fontWeight: isActive
+                                  ? FontWeight.w600
+                                  : FontWeight.w400)),
                     ],
                   ),
                 ),
@@ -143,37 +124,12 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surfaceVariant,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Music App', style: TextStyle(color: AppColors.onBackground)),
-        content: const Text(
-          'Ứng dụng nghe nhạc với kiến trúc MVVM.\nVersion 1.0.0',
-          style: TextStyle(color: AppColors.onSurfaceVariant, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng', style: TextStyle(color: AppColors.primary)),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _NavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
-
-  const _NavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-  });
+  const _NavItem(
+      {required this.icon, required this.activeIcon, required this.label});
 }
