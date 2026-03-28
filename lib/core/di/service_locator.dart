@@ -7,6 +7,8 @@ import '../../viewmodels/playlist_viewmodel.dart';
 import '../../viewmodels/history_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/search_viewmodel.dart';
+import '../../viewmodels/artist_viewmodel.dart';
+import '../../viewmodels/upload_viewmodel.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -24,4 +26,8 @@ void setupDependencies() {
           () => HomeViewModel(sl<MockMusicRepository>(), sl<HistoryViewModel>()));
   sl.registerLazySingleton<SearchViewModel>(
           () => SearchViewModel(sl<MockMusicRepository>()));
+  sl.registerLazySingleton<ArtistViewModel>(
+          () => ArtistViewModel(sl<MockMusicRepository>()));
+  sl.registerLazySingleton<UploadViewModel>(
+          () => UploadViewModel(sl<MockMusicRepository>()));
 }

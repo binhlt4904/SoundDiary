@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../artist/artist_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -52,6 +53,12 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           // Menu items
+          _MenuItem(
+            icon: Icons.mic_rounded,
+            label: 'Quản lý Artist & Album',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ArtistScreen())),
+          ),
           _MenuItem(
             icon: Icons.notifications_outlined,
             label: 'Thông báo',

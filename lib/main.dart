@@ -11,6 +11,8 @@ import 'viewmodels/playlist_viewmodel.dart';
 import 'viewmodels/history_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
 import 'viewmodels/search_viewmodel.dart';
+import 'viewmodels/artist_viewmodel.dart';
+import 'viewmodels/upload_viewmodel.dart';
 import 'views/main_shell.dart';
 
 void main() {
@@ -50,6 +52,10 @@ class MusicApp extends StatelessWidget {
             create: (_) => sl<HomeViewModel>()),
         ChangeNotifierProvider<SearchViewModel>(
             create: (_) => sl<SearchViewModel>()),
+        ChangeNotifierProvider<ArtistViewModel>(
+            create: (_) => sl<ArtistViewModel>()),
+        ChangeNotifierProvider<UploadViewModel>(
+            create: (_) => sl<UploadViewModel>()),
       ],
       child: MaterialApp(
         title: 'Music App',

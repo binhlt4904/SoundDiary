@@ -6,6 +6,7 @@ import 'library/library_screen.dart';
 import 'songs/all_songs_screen.dart';
 import 'profile/profile_screen.dart';
 import 'widgets/mini_player_widget.dart';
+import 'upload/upload_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -26,11 +27,11 @@ class _MainShellState extends State<MainShell> {
   ];
 
   static const List<_NavItem> _navItems = [
-    _NavItem(icon: Icons.home_outlined,          activeIcon: Icons.home_rounded,          label: 'Home'),
-    _NavItem(icon: Icons.search_outlined,         activeIcon: Icons.search_rounded,         label: 'Tìm kiếm'),
-    _NavItem(icon: Icons.folder_outlined,         activeIcon: Icons.folder_rounded,         label: 'Thư viện'),
-    _NavItem(icon: Icons.library_music_outlined,  activeIcon: Icons.library_music_rounded,  label: 'Nhạc'),
-    _NavItem(icon: Icons.person_outline_rounded,  activeIcon: Icons.person_rounded,         label: 'Profile'),
+    _NavItem(icon: Icons.home_outlined,         activeIcon: Icons.home_rounded,          label: 'Home'),
+    _NavItem(icon: Icons.search_outlined,        activeIcon: Icons.search_rounded,         label: 'Tìm kiếm'),
+    _NavItem(icon: Icons.folder_outlined,        activeIcon: Icons.folder_rounded,         label: 'Thư viện'),
+    _NavItem(icon: Icons.library_music_outlined, activeIcon: Icons.library_music_rounded,  label: 'Nhạc'),
+    _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded,         label: 'Profile'),
   ];
 
   @override
@@ -44,8 +45,7 @@ class _MainShellState extends State<MainShell> {
         title: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 32, height: 32,
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
@@ -62,6 +62,37 @@ class _MainShellState extends State<MainShell> {
                     letterSpacing: 0.3)),
           ],
         ),
+        actions: [
+          // Upload button
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UploadScreen()),
+            ),
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.cloud_upload_outlined,
+                      color: AppColors.primary, size: 16),
+                  SizedBox(width: 5),
+                  Text('Upload',
+                      style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
