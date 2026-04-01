@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/theme/app_theme.dart';
+import 'core/supabase/supabase_config.dart';
+import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/player_viewmodel.dart';
 import 'viewmodels/library_viewmodel.dart';
 import 'viewmodels/favorites_viewmodel.dart';
@@ -12,11 +15,17 @@ import 'viewmodels/history_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
 import 'viewmodels/search_viewmodel.dart';
 import 'viewmodels/artist_viewmodel.dart';
-import 'viewmodels/upload_viewmodel.dart';
 import 'views/main_shell.dart';
+import 'views/auth/login_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
+  );
+
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -27,6 +36,7 @@ void main() {
     systemNavigationBarColor: Color(0xFF1A1A1A),
     systemNavigationBarIconBrightness: Brightness.light,
   ));
+
   setupDependencies();
   runApp(const MusicApp());
 }
@@ -38,6 +48,8 @@ class MusicApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<AuthViewModel>(
+            create: (_) => sl<AuthViewModel>()),
         ChangeNotifierProvider<PlayerViewModel>(
             create: (_) => sl<PlayerViewModel>()),
         ChangeNotifierProvider<LibraryViewModel>(
@@ -54,15 +66,33 @@ class MusicApp extends StatelessWidget {
             create: (_) => sl<SearchViewModel>()),
         ChangeNotifierProvider<ArtistViewModel>(
             create: (_) => sl<ArtistViewModel>()),
-        ChangeNotifierProvider<UploadViewModel>(
-            create: (_) => sl<UploadViewModel>()),
       ],
       child: MaterialApp(
-        title: 'Music App',
+        title: 'Sound Diary',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        home: const MainShell(),
+        home: const _AuthGate(),
       ),
     );
+  }
+}
+
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthViewModel>();
+
+    if (auth.isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0D0D0D),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF7C5CBF)),
+        ),
+      );
+    }
+
+    return auth.isLoggedIn ? const MainShell() : const LoginScreen();
   }
 }

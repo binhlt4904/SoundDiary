@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -187,6 +188,20 @@ class _SectionTitle extends StatelessWidget {
 }
 
 // ── Featured Banner ───────────────────────────────────────────────────────────
+
+/// Converts a picsum thumbnail URL (e.g. `.../seed/name/200`) into a
+/// landscape high-resolution URL (1080×400) suitable for the banner.
+String _bannerImageUrl(String albumArtUrl) {
+  final uri = Uri.parse(albumArtUrl);
+  final segments = List<String>.from(uri.pathSegments);
+  // Strip any trailing numeric size segments added by picsum.
+  while (segments.isNotEmpty && int.tryParse(segments.last) != null) {
+    segments.removeLast();
+  }
+  segments.addAll(['1080', '400']);
+  return uri.replace(pathSegments: segments).toString();
+}
+
 class _FeaturedBanner extends StatelessWidget {
   final Song song;
   final bool isPlaying;
@@ -220,25 +235,30 @@ class _FeaturedBanner extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Background image
-              Image.network(
-                song.albumArt,
+              // Background image — 1080×400 landscape, cached on disk
+              CachedNetworkImage(
+                imageUrl: _bannerImageUrl(song.albumArt),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                placeholder: (_, __) => Container(
+                  color: AppColors.surfaceVariant,
+                ),
+                errorWidget: (_, __, ___) => Container(
                   color: AppColors.surfaceVariant,
                   child: const Icon(Icons.music_note,
                       color: AppColors.primary, size: 60),
                 ),
               ),
-              // Gradient overlay
+              // Gradient overlay — smooth 3-stop fade for text legibility
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.45, 1.0],
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.8),
+                      Colors.black.withOpacity(0.35),
+                      Colors.black.withOpacity(0.85),
                     ],
                   ),
                 ),

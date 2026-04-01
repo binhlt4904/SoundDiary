@@ -1,16 +1,30 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:just_audio/just_audio.dart' as ja;
 import '../domain/entities/song.dart';
 import '../domain/enums/player_state.dart';
 
 class PlayerViewModel extends ChangeNotifier {
+  final _player = ja.AudioPlayer();
+
   Song? _currentSong;
   PlayerState _playerState = PlayerState.stopped;
   Duration _position = Duration.zero;
-  Duration _duration = const Duration(minutes: 3, seconds: 30);
+  Duration _duration = Duration.zero;
   List<Song> _queue = [];
   int _currentIndex = -1;
   bool _isShuffle = false;
   RepeatMode _repeatMode = RepeatMode.none;
+
+  late final StreamSubscription<ja.PlayerState> _playerStateSub;
+  late final StreamSubscription<Duration> _positionSub;
+  late final StreamSubscription<Duration?> _durationSub;
+
+  PlayerViewModel() {
+    _playerStateSub = _player.playerStateStream.listen(_onPlayerState);
+    _positionSub = _player.positionStream.listen(_onPosition);
+    _durationSub = _player.durationStream.listen(_onDuration);
+  }
 
   // Getters
   Song? get currentSong => _currentSong;
@@ -26,7 +40,38 @@ class PlayerViewModel extends ChangeNotifier {
           ? _position.inMilliseconds / _duration.inMilliseconds
           : 0.0;
 
-  void playSong(Song song, {List<Song>? queue}) {
+  void _onPlayerState(ja.PlayerState state) {
+    if (state.processingState == ja.ProcessingState.completed) {
+      _handleSongEnd();
+      return;
+    }
+
+    if (state.processingState == ja.ProcessingState.idle) return;
+
+    if (state.playing) {
+      _playerState = PlayerState.playing;
+    } else if (state.processingState == ja.ProcessingState.loading ||
+        state.processingState == ja.ProcessingState.buffering) {
+      _playerState = PlayerState.loading;
+    } else if (_currentSong != null) {
+      _playerState = PlayerState.paused;
+    }
+    notifyListeners();
+  }
+
+  void _onPosition(Duration pos) {
+    _position = pos;
+    notifyListeners();
+  }
+
+  void _onDuration(Duration? dur) {
+    if (dur != null) {
+      _duration = dur;
+      notifyListeners();
+    }
+  }
+
+  Future<void> playSong(Song song, {List<Song>? queue}) async {
     if (queue != null) {
       _queue = queue;
       _currentIndex = queue.indexWhere((s) => s.id == song.id);
@@ -38,22 +83,27 @@ class PlayerViewModel extends ChangeNotifier {
     }
 
     _currentSong = song;
-    _duration = song.duration;
     _position = Duration.zero;
-    _playerState = PlayerState.playing;
-    _startSimulatedPlayback();
+    _duration = Duration.zero;
+    _playerState = PlayerState.loading;
     notifyListeners();
+
+    try {
+      await _player.setUrl(song.audioUrl);
+      await _player.play();
+    } catch (_) {
+      _playerState = PlayerState.stopped;
+      notifyListeners();
+    }
   }
 
   void togglePlayPause() {
     if (_currentSong == null) return;
-    if (_playerState == PlayerState.playing) {
-      _playerState = PlayerState.paused;
+    if (_player.playing) {
+      _player.pause();
     } else {
-      _playerState = PlayerState.playing;
-      _startSimulatedPlayback();
+      _player.play();
     }
-    notifyListeners();
   }
 
   void skipNext() {
@@ -69,8 +119,7 @@ class PlayerViewModel extends ChangeNotifier {
   void skipPrevious() {
     if (_queue.isEmpty) return;
     if (_position.inSeconds > 3) {
-      _position = Duration.zero;
-      notifyListeners();
+      _player.seek(Duration.zero);
       return;
     }
     _currentIndex = (_currentIndex - 1 + _queue.length) % _queue.length;
@@ -78,10 +127,9 @@ class PlayerViewModel extends ChangeNotifier {
   }
 
   void seekTo(double value) {
-    _position = Duration(
+    _player.seek(Duration(
       milliseconds: (value * _duration.inMilliseconds).round(),
-    );
-    notifyListeners();
+    ));
   }
 
   void toggleShuffle() {
@@ -102,21 +150,6 @@ class PlayerViewModel extends ChangeNotifier {
         break;
     }
     notifyListeners();
-  }
-
-  // Simulates progress (in real app, use just_audio)
-  void _startSimulatedPlayback() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (_playerState != PlayerState.playing) return false;
-      _position += const Duration(milliseconds: 500);
-      if (_position >= _duration) {
-        _handleSongEnd();
-        return false;
-      }
-      notifyListeners();
-      return true;
-    });
   }
 
   void _handleSongEnd() {
@@ -143,5 +176,14 @@ class PlayerViewModel extends ChangeNotifier {
     final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
+  }
+
+  @override
+  void dispose() {
+    _playerStateSub.cancel();
+    _positionSub.cancel();
+    _durationSub.cancel();
+    _player.dispose();
+    super.dispose();
   }
 }
